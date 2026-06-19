@@ -1,0 +1,17 @@
+name: Custard CI
+# The "trusted" trigger (mirrors nodejs-docs-samples custard-ci.yaml, on: pull_request).
+# For a FORK PR this requires maintainer approval the FIRST time; once the author has one
+# merged PR (CONTRIBUTOR), GitHub auto-runs it (if the org uses first-time-only approval).
+# Benign by itself — no secrets. Its only job is to RUN, which fires custard-run via workflow_run.
+on:
+  pull_request:
+jobs:
+  affected:
+    name: Finding affected tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compute affected (placeholder)
+        run: |
+          echo "Custard CI for PR #${{ github.event.pull_request.number }}"
+          echo "head_sha=${{ github.event.pull_request.head.sha }}"
+          # in_progress of THIS run triggers custard-run.yaml in the base context.

@@ -1,0 +1,45 @@
+name: Custard Run
+# VULNERABLE workflow — faithful mirror of nodejs-docs-samples custard-run.yaml.
+# Fires on the "Custard CI" run (workflow_run) => executes in the BASE-repo context (so it
+# has id-token: write + can mint the WIF token), then checks out the FORK's head_sha and
+# runs it. The fork's code therefore executes with the victim SA's WIF identity.
+on:
+  workflow_run:
+    workflows: ["Custard CI"]
+    types: [in_progress]
+
+permissions:
+  id-token: write   # WIF
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      SERVICE_ACCOUNT: custard-victim-sa@pwnd-hard.iam.gserviceaccount.com   # analog of kokoro-system-test@long-door-651 (hardcoded, like the real one)
+    steps:
+      # 1) check out the FORK PR's code (attacker-controlled), exactly like custard-run L81
+      - name: Checkout fork head_sha (attacker code)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      # 2) auth to GCP via WIF — base context, so the OIDC 'repository' claim is the VICTIM repo
+      #    => satisfies the WIF attribute-condition => mints the victim SA token (custard-run L134)
+      - name: Auth to GCP (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/36249935295/locations/global/workloadIdentityPools/custard-poc-pool/providers/custard-poc-provider
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 3) run the fork's code WITH the victim WIF token present (custard-run L86: npm install)
+      - name: Install + test (runs the fork's package.json lifecycle scripts)
+        run: |
+          npm install     # runs the fork's postinstall = attacker code, with GCP creds in env
+          npm test

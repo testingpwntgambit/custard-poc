@@ -1,0 +1,9 @@
+{
+  "name": "custard-poc-sample",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Benign sample. Custard runs `npm install && npm test` on the PR head.",
+  "scripts": {
+    "test": "echo \"[sample] benign test OK\""
+  }
+}
